@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .weather-app-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .search-box {
+            margin-bottom: 20px;
+        }
+
+        #city-input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        #search-btn {
+            padding: 10px 15px;
+            border: none;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .weather-info {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="weather-app-container">
+        <h1>Weather App</h1>
+        <div class="search-box">
+            <input type="text" id="city-input" placeholder="Enter city name">
+            <button id="search-btn">Search</button>
+        </div>
+        <div class="weather-info" style="display: none;">
+            <h2 id="city-name"></h2>
+            <p id="temperature"></p>
+            <p id="description"></p>
+            <p id="humidity"></p>
+            <p id="wind-speed"></p>
+        </div>
+        <div class="error-message" style="display: none;">
+            <p>City not found. Please try again.</p>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = '41f92192d555de91454b39be2e5131ce';
+        const searchButton = document.getElementById('search-btn');
+        const cityInput = document.getElementById('city-input');
+        const weatherInfoDiv = document.querySelector('.weather-info');
+        const errorMessageDiv = document.querySelector('.error-message');
+
+        async function getWeatherData(city) {
+            const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) throw new Error('City not found');
+                const data = await response.json();
+                displayWeather(data);
+            } catch (error) {
+                showError();
+            }
+        }
+
+        function getWeatherDataByLocation() {
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported by your browser.");
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const { latitude, longitude } = position.coords;
+                const apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric`;
+                try {
+                    const response = await fetch(apiUrl);
+                    if (!response.ok) throw new Error('Could not get weather data for your location');
+                    const data = await response.json();
+                    displayWeather(data);
+                } catch (error) {
+                    showError();
+                }
+            });
+        }
+
+        function displayWeather(data) {
+            document.getElementById('city-name').textContent = data.name;
+            document.getElementById('temperature').textContent = `Temperature: ${data.main.temp}°C`;
+            document.getElementById('description').textContent = `Conditions: ${data.weather[0].description}`;
+            document.getElementById('humidity').textContent = `Humidity: ${data.main.humidity}%`;
+            document.getElementById('wind-speed').textContent = `Wind Speed: ${data.wind.speed} m/s`;
+            weatherInfoDiv.style.display = 'block';
+            errorMessageDiv.style.display = 'none';
+        }
+
+        function showError() {
+            weatherInfoDiv.style.display = 'none';
+            errorMessageDiv.style.display = 'block';
+        }
+
+        searchButton.addEventListener('click', () => {
+            const city = cityInput.value.trim();
+            if (city) getWeatherData(city);
+        });
+
+        getWeatherDataByLocation();
+    </script>
+</body>
+</html>
